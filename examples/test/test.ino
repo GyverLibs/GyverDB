@@ -3,12 +3,10 @@
 
 GyverDB db;
 
-DB_KEYS(
-    keys,
-    DB_KEY(key1),
-    DB_KEY(arr),
-
-);
+enum keys : size_t {
+    key1,
+    arr,
+};
 
 void setup() {
     Serial.begin(115200);

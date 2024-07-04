@@ -13,22 +13,6 @@
 // #define DB_NO_INT64    // убрать поддержку int64
 // #define DB_NO_CONVERT  // не конвертировать данные (принудительно менять тип записи, keepTypes не работает)
 
-#define DB_MAKE_SET(type, dbtype, size)                 \
-    bool set(size_t hash, type value) {                 \
-        return _set(dbtype, hash, &value, size, false); \
-    }                                                   \
-    bool set(const Text& key, type value) {             \
-        return set(key.hash(), value);                  \
-    }
-
-#define DB_MAKE_INIT(type, dbtype, size)               \
-    bool init(size_t hash, type value) {               \
-        return _set(dbtype, hash, &value, size, true); \
-    }                                                  \
-    bool init(const Text& key, type value) {           \
-        return init(key.hash(), value);                \
-    }
-
 class GyverDB : private gtl::stack_uniq<gdb::block_t> {
    public:
     using gtl::stack_uniq<gdb::block_t>::length;
@@ -208,27 +192,9 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     template <typename T>
     bool set(const Text& key, const T& value) { return set<T>(key.hash(), value); }
 
-    // num
-    DB_MAKE_SET(bool, gdb::Type::Uint8, 1);
-    DB_MAKE_SET(char, gdb::Type::Uint8, 1);
-    DB_MAKE_SET(signed char, gdb::Type::Int8, 1);
-    DB_MAKE_SET(unsigned char, gdb::Type::Uint8, 1);
-    DB_MAKE_SET(short, gdb::Type::Int16, 2);
-    DB_MAKE_SET(unsigned short, gdb::Type::Uint16, 2);
-    DB_MAKE_SET(long, gdb::Type::Int32, 4);
-    DB_MAKE_SET(unsigned long, gdb::Type::Uint32, 4);
-#if (UINT_MAX == UINT32_MAX)
-    DB_MAKE_SET(int, gdb::Type::Int32, 4);
-    DB_MAKE_SET(unsigned int, gdb::Type::Uint32, 4);
-#else
-    DB_MAKE_SET(int, gdb::Type::Int16, 2);
-    DB_MAKE_SET(unsigned int, gdb::Type::Uint16, 2);
-#endif
-#ifndef DB_NO_INT64
-    DB_MAKE_SET(long long, gdb::Type::Int64, 8);
-    DB_MAKE_SET(unsigned long long, gdb::Type::Uint64, 8);
-#endif
-    DB_MAKE_SET(float, gdb::Type::Float, 4);
+    // float
+    bool set(size_t hash, float value) { return _set(gdb::Type::Float, hash, &value, 4); }
+    bool set(const Text& key, float value) { return set(key.hash(), value); }
     bool set(size_t hash, double value) { return set(hash, (float)value); }
     bool set(const Text& key, double value) { return set(key.hash(), value); }
 
@@ -240,6 +206,31 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     bool set(size_t hash, const String& value) { return set(hash, Text(value)); }
     bool set(const Text& key, const String& value) { return set(key.hash(), value); }
 
+    // int
+#define DB_MAKE_INT(type)                                              \
+    bool set(size_t hash, type value) { return _setInt(hash, value); } \
+    bool set(const Text& key, type value) { return _setInt(key.hash(), value); }
+
+#define DB_MAKE_UINT(type)                                              \
+    bool set(size_t hash, type value) { return _setUint(hash, value); } \
+    bool set(const Text& key, type value) { return _setUint(key.hash(), value); }
+
+    DB_MAKE_UINT(bool)
+    DB_MAKE_UINT(char)
+    DB_MAKE_INT(signed char)
+    DB_MAKE_UINT(unsigned char)
+    DB_MAKE_INT(short)
+    DB_MAKE_UINT(unsigned short)
+    DB_MAKE_INT(int)
+    DB_MAKE_UINT(unsigned int)
+    DB_MAKE_INT(long)
+    DB_MAKE_UINT(unsigned long)
+
+    bool set(size_t hash, long long value) { return _set(gdb::Type::Int64, hash, &value, 8); }
+    bool set(const Text& key, long long value) { return set(key.hash(), value); }
+    bool set(size_t hash, unsigned long long value) { return _set(gdb::Type::Uint64, hash, &value, 8); }
+    bool set(const Text& key, unsigned long long value) { return set(key.hash(), value); }
+
     // ===================== INIT =====================
 
     // bin
@@ -250,27 +241,9 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     template <typename T>
     bool init(const Text& key, const T& value) { return init<T>(key.hash(), value); }
 
-    // num
-    DB_MAKE_INIT(bool, gdb::Type::Uint8, 1);
-    DB_MAKE_INIT(char, gdb::Type::Uint8, 1);
-    DB_MAKE_INIT(signed char, gdb::Type::Int8, 1);
-    DB_MAKE_INIT(unsigned char, gdb::Type::Uint8, 1);
-    DB_MAKE_INIT(short, gdb::Type::Int16, 2);
-    DB_MAKE_INIT(unsigned short, gdb::Type::Uint16, 2);
-    DB_MAKE_INIT(long, gdb::Type::Int32, 4);
-    DB_MAKE_INIT(unsigned long, gdb::Type::Uint32, 4);
-#if (UINT_MAX == UINT32_MAX)
-    DB_MAKE_INIT(int, gdb::Type::Int32, 4);
-    DB_MAKE_INIT(unsigned int, gdb::Type::Uint32, 4);
-#else
-    DB_MAKE_INIT(int, gdb::Type::Int16, 2);
-    DB_MAKE_INIT(unsigned int, gdb::Type::Uint16, 2);
-#endif
-#ifndef DB_NO_INT64
-    DB_MAKE_INIT(long long, gdb::Type::Int64, 8);
-    DB_MAKE_INIT(unsigned long long, gdb::Type::Uint64, 8);
-#endif
-    DB_MAKE_INIT(float, gdb::Type::Float, 4);
+    // float
+    bool init(size_t hash, float value) { return _set(gdb::Type::Float, hash, &value, 4, true); }
+    bool init(const Text& key, float value) { return init(key.hash(), value); }
     bool init(size_t hash, double value) { return init(hash, (float)value); }
     bool init(const Text& key, double value) { return init(key.hash(), value); }
 
@@ -281,6 +254,31 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     bool init(const Text& key, const char* value) { return init(key.hash(), value); }
     bool init(size_t hash, const String& value) { return init(hash, Text(value)); }
     bool init(const Text& key, const String& value) { return init(key.hash(), value); }
+
+    // int
+#define DB_MAKE_INIT_INT(type)                                                \
+    bool init(size_t hash, type value) { return _setInt(hash, value, true); } \
+    bool init(const Text& key, type value) { return _setInt(key.hash(), value, true); }
+
+#define DB_MAKE_INIT_UINT(type)                                                \
+    bool init(size_t hash, type value) { return _setUint(hash, value, true); } \
+    bool init(const Text& key, type value) { return _setUint(key.hash(), value, true); }
+
+    DB_MAKE_INIT_UINT(bool)
+    DB_MAKE_INIT_UINT(char)
+    DB_MAKE_INIT_INT(signed char)
+    DB_MAKE_INIT_UINT(unsigned char)
+    DB_MAKE_INIT_INT(short)
+    DB_MAKE_INIT_UINT(unsigned short)
+    DB_MAKE_INIT_INT(int)
+    DB_MAKE_INIT_UINT(unsigned int)
+    DB_MAKE_INIT_INT(long)
+    DB_MAKE_INIT_UINT(unsigned long)
+
+    bool init(size_t hash, long long value) { return _set(gdb::Type::Int64, hash, &value, 8, true); }
+    bool init(const Text& key, long long value) { return init(key.hash(), value); }
+    bool init(size_t hash, unsigned long long value) { return _set(gdb::Type::Uint64, hash, &value, 8, true); }
+    bool init(const Text& key, unsigned long long value) { return init(key.hash(), value); }
 
     // move
     GyverDB(GyverDB& gdb) {
@@ -329,7 +327,11 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         if (this == &gdb) return;
         reset();
         gtl::stack_uniq<gdb::block_t>::move(gdb);
+#ifndef DB_NO_UPDATES
+        _updates.move(gdb._updates);
+#endif
         _keepTypes = gdb._keepTypes;
+        _useUpdates = gdb._useUpdates;
         _changed = 1;
     }
 
@@ -418,9 +420,16 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
                 block.reset();
                 return 0;
             }
-            _changed = 1;
+            // _changed = 1;
         }
         return 1;
+    }
+
+    bool _setInt(size_t hash, int32_t value, bool noupd = false) {
+        return _set(gdb::Type::Int, hash, &value, 4, noupd);
+    }
+    bool _setUint(size_t hash, uint32_t value, bool noupd = false) {
+        return _set(gdb::Type::Uint, hash, &value, 4, noupd);
     }
 
     bool _set(gdb::Type type, size_t hash, const void* value, size_t len, bool noupdate = false) {

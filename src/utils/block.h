@@ -21,12 +21,8 @@ class block_t {
     // указатель непосредственно на данные размера size()
     void* buffer() const {
         switch (type()) {
-            case Type::Int8:
-            case Type::Uint8:
-            case Type::Int16:
-            case Type::Uint16:
-            case Type::Int32:
-            case Type::Uint32:
+            case Type::Int:
+            case Type::Uint:
             case Type::Float:
                 return (void*)&data;
 
@@ -60,18 +56,10 @@ class block_t {
         switch (type()) {
             case Type::Bin:
                 return F("Bin");
-            case Type::Int8:
-                return F("Int8");
-            case Type::Uint8:
-                return F("Uint8");
-            case Type::Int16:
-                return F("Int16");
-            case Type::Uint16:
-                return F("Uint16");
-            case Type::Int32:
-                return F("Int32");
-            case Type::Uint32:
-                return F("Uint32");
+            case Type::Int:
+                return F("Int");
+            case Type::Uint:
+                return F("Uint");
             case Type::Int64:
                 return F("Int64");
             case Type::Uint64:
@@ -101,7 +89,7 @@ class block_t {
         return (ptr() && type() == Type::String);
     }
 
-    // освободить динамический буфер
+    // освободить динамический буфер и сбросить тип
     void reset() {
         if (isDynamic() && ptr()) free(ptr());
         typehash = DB_REPLACE_TYPE(typehash, Type::None);
@@ -153,7 +141,7 @@ class block_t {
         if (!valid() || ntype == Type::None) return 0;
 
         if (type() == ntype) {
-            return compareAndUpdate(value, len);
+            return compareAndUpdate(value, len);//!!!!!!!!!
         } else {
 #ifndef DB_NO_CONVERT
             if (keepType) {
@@ -163,19 +151,9 @@ class block_t {
                         Value v = conv.toValue();
                         return compareAndUpdate(v.str(), v.length());
                     }
-                    case Type::Int8:
-                    case Type::Uint8: {
-                        uint8_t v = conv.toInt16();
-                        return compareAndUpdate(&v, 1);
-                    }
-                    case Type::Int16:
-                    case Type::Uint16: {
-                        uint16_t v = conv.toInt16();
-                        return compareAndUpdate(&v, 2);
-                    }
-                    case Type::Int32:
-                    case Type::Uint32: {
-                        uint32_t v = conv.toInt32();
+                    case Type::Int:
+                    case Type::Uint: {
+                        uint32_t v = conv.toInt();
                         return compareAndUpdate(&v, 4);
                     }
 #ifndef DB_NO_INT64
@@ -185,11 +163,12 @@ class block_t {
                         return compareAndUpdate(&v, 8);
                     } break;
 #endif
+#ifndef DB_NO_FLOAT
                     case Type::Float: {
                         float v = conv.toFloat();
                         return compareAndUpdate(&v, 4);
                     }
-
+#endif
                     default:
                         return 0;
                 }

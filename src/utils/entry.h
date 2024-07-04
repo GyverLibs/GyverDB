@@ -1,34 +1,12 @@
 #pragma once
 #include <Arduino.h>
 #include <StringUtils.h>
-#include <limits.h>
 
 #include "block.h"
 
 namespace gdb {
 
 class Entry : protected block_t, public Text {
-    using Text::toBool;
-    using Text::toFloat;
-    using Text::toInt;
-    using Text::toInt16;
-    using Text::toInt32;
-    using Text::toInt64;
-    using Text::toString;
-    using Text::type;
-    using Text::operator bool;
-    using Text::operator double;
-    using Text::operator float;
-    using Text::operator int;
-    using Text::operator long long;
-    using Text::operator long;
-    using Text::operator short;
-    using Text::operator signed char;
-    using Text::operator unsigned char;
-    using Text::operator unsigned long long;
-    using Text::operator unsigned long;
-    using Text::operator unsigned short;
-
    public:
     using block_t::buffer;
     using block_t::isValidString;
@@ -36,8 +14,6 @@ class Entry : protected block_t, public Text {
     using block_t::reserve;
     using block_t::size;
     using block_t::type;
-    using block_t::valid;
-    using block_t::operator bool;
 
     Entry() {}
     Entry(const block_t& b) : block_t(b), Text(isValidString() ? (const char*)buffer() : nullptr, size()) {}
@@ -47,11 +23,6 @@ class Entry : protected block_t, public Text {
         return block_t::type();
     }
 
-    // ambiguous String()
-    // operator const char*() const {
-    //     return isValidString() ? (const char*)buffer() : "";
-    // }
-
     bool valid() const {
         return block_t::valid();
     }
@@ -60,7 +31,7 @@ class Entry : protected block_t, public Text {
         return block_t::valid();
     }
 
-    size_t printTo(Print& p) const {
+    size_t printTo(Print& p) const {  // override
         if (type() == gdb::Type::Bin) {
             size_t ret = 0;
             for (size_t b = 0; b < size(); b++) {
@@ -96,12 +67,7 @@ class Entry : protected block_t, public Text {
         return Converter(type(), buffer(), size()).toValue();
     }
 
-    // String toString() const {
-    //     return Converter(type(), buffer(), size()).toString();
-    // }
-
-    // override
-    bool addString(String& s) const {
+    bool addString(String& s) const {  // override
         toText().addString(s);
         return 1;
     }
@@ -110,24 +76,8 @@ class Entry : protected block_t, public Text {
         return Converter(type(), buffer(), size()).toBool();
     }
 
-    int toInt() const {
-#if (UINT_MAX == UINT32_MAX)
-        return toInt32();
-#else
-        return toInt16();
-#endif
-    }
-
-    int8_t toInt8() const {
-        return toInt16();
-    }
-
-    int16_t toInt16() const {
-        return Converter(type(), buffer(), size()).toInt16();
-    }
-
-    int32_t toInt32() const {
-        return Converter(type(), buffer(), size()).toInt32();
+    int32_t toInt() const {
+        return Converter(type(), buffer(), size()).toInt();
     }
 
     int64_t toInt64() const {
@@ -140,137 +90,66 @@ class Entry : protected block_t, public Text {
 
     // ======================= CAST =======================
 
-    // signed char
-    operator signed char() const {
-        return (char)toInt16();
-    }
-    bool operator==(const signed char v) const {
-        return toInt16() == v;
-    }
-    bool operator!=(const signed char v) const {
-        return toInt16() != v;
-    }
-
-    // unsigned char
-    operator unsigned char() const {
-        return toInt16();
-    }
-    bool operator==(const unsigned char v) const {
-        return (unsigned char)toInt16() == v;
-    }
-    bool operator!=(const unsigned char v) const {
-        return (unsigned char)toInt16() != v;
-    }
-
-    // short
-    operator short() const {
-        return toInt16();
-    }
-    bool operator==(const short v) const {
-        return toInt16() == v;
-    }
-    bool operator!=(const short v) const {
-        return toInt16() != v;
+#define DB_MAKE_OPERATOR(type, func)      \
+    operator type() const {               \
+        return (type)func();              \
+    }                                     \
+    bool operator==(const type v) const { \
+        return (type)func() == v;         \
+    }                                     \
+    bool operator!=(const type v) const { \
+        return (type)func() != v;         \
+    }                                     \
+    bool operator>(const type v) const {  \
+        return (type)func() > v;          \
+    }                                     \
+    bool operator<(const type v) const {  \
+        return (type)func() < v;          \
+    }                                     \
+    bool operator>=(const type v) const { \
+        return (type)func() >= v;         \
+    }                                     \
+    bool operator<=(const type v) const { \
+        return (type)func() <= v;         \
     }
 
-    // unsigned short
-    operator unsigned short() const {
-        return toInt16();
-    }
-    bool operator==(const unsigned short v) const {
-        return (unsigned short)toInt16() == v;
-    }
-    bool operator!=(const unsigned short v) const {
-        return (unsigned short)toInt16() != v;
-    }
+    // DB_MAKE_OPERATOR(bool, toBool)
+    DB_MAKE_OPERATOR(char, toInt)
+    DB_MAKE_OPERATOR(signed char, toInt)
+    DB_MAKE_OPERATOR(unsigned char, toInt)
+    DB_MAKE_OPERATOR(short, toInt)
+    DB_MAKE_OPERATOR(unsigned short, toInt)
+    DB_MAKE_OPERATOR(int, toInt)
+    DB_MAKE_OPERATOR(unsigned int, toInt)
+    DB_MAKE_OPERATOR(long, toInt)
+    DB_MAKE_OPERATOR(unsigned long, toInt)
+    DB_MAKE_OPERATOR(long long, toInt64)
+    DB_MAKE_OPERATOR(unsigned long long, toInt64)
+    DB_MAKE_OPERATOR(float, toFloat)
+    DB_MAKE_OPERATOR(double, toFloat)
 
-    // int
-    operator int() const {
-        return toInt();
-    }
-    bool operator==(const int v) const {
-        return toInt() == v;
-    }
-    bool operator!=(const int v) const {
-        return toInt() != v;
-    }
-
-    // unsigned int
-    operator unsigned int() const {
-        return toInt();
-    }
-    bool operator==(const unsigned int v) const {
-        return (unsigned int)toInt() == v;
-    }
-    bool operator!=(const unsigned int v) const {
-        return (unsigned int)toInt() != v;
-    }
-
-    // long
-    operator long() const {
-        return toInt32();
-    }
-    bool operator==(const long v) const {
-        return toInt32() == v;
-    }
-    bool operator!=(const long v) const {
-        return toInt32() != v;
-    }
-
-    // unsigned long
-    operator unsigned long() const {
-        return toInt32();
-    }
-    bool operator==(const unsigned long v) const {
-        return (unsigned long)toInt32() == v;
-    }
-    bool operator!=(const unsigned long v) const {
-        return (unsigned long)toInt32() != v;
-    }
-
-    // long long
-    operator long long() const {
-        return toInt64();
-    }
-    bool operator==(const long long v) const {
-        return toInt64() == v;
-    }
-    bool operator!=(const long long v) const {
-        return toInt64() != v;
-    }
-
-    // unsigned long long
-    operator unsigned long long() const {
-        return toInt64();
-    }
-    bool operator==(const unsigned long long& v) const {
-        return (unsigned long long)toInt64() == v;
-    }
-    bool operator!=(const unsigned long long& v) const {
-        return (unsigned long long)toInt64() != v;
-    }
-
-    // float
-    operator float() const {
-        return toFloat();
-    }
-    bool operator==(const float v) const {
-        return toFloat() == v;
-    }
-    bool operator!=(const float v) const {
-        return toFloat() != v;
-    }
-
-    // double
-    operator double() const {
-        return toFloat();
-    }
-    bool operator==(const double& v) const {
-        return toFloat() == v;
-    }
-    bool operator!=(const double& v) const {
-        return toFloat() != v;
-    }
+   private:
+    using Text::toBool;
+    using Text::toFloat;
+    using Text::toInt;
+    using Text::toInt16;
+    using Text::toInt32;
+    using Text::toInt64;
+    using Text::toString;
+    using Text::type;
+    using Text::operator bool;
+    using Text::operator char;
+    using Text::operator signed char;
+    using Text::operator short;
+    using Text::operator unsigned short;
+    using Text::operator int;
+    using Text::operator unsigned int;
+    using Text::operator long;
+    using Text::operator unsigned long;
+    using Text::operator long long;
+    using Text::operator unsigned long long;
+    using Text::operator float;
+    using Text::operator double;
 };
 
 }  // namespace gdb

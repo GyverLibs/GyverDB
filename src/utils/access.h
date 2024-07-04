@@ -5,11 +5,6 @@
 #include "entry.h"
 #include "types.h"
 
-#define DB_MAKE_ASSIGN(type, dbtype, size)              \
-    bool operator=(type value) {                        \
-        return _hook(_db, dbtype, _hash, &value, size); \
-    }
-
 namespace gdb {
 
 typedef bool (*setHook)(void* db, gdb::Type type, size_t hash, const void* value, size_t len);
@@ -18,32 +13,37 @@ class Access : public Entry {
    public:
     Access(Entry entry, size_t hash, void* db, setHook hook) : Entry(entry), _hash(hash), _db(db), _hook(hook) {}
 
-    // num
-    DB_MAKE_ASSIGN(bool, gdb::Type::Uint8, 1);
-    DB_MAKE_ASSIGN(char, gdb::Type::Uint8, 1);
-    DB_MAKE_ASSIGN(signed char, gdb::Type::Int8, 1);
-    DB_MAKE_ASSIGN(unsigned char, gdb::Type::Uint8, 1);
+// int
+#define DB_MAKE_ASSIGN_INT(type) \
+    bool operator=(type value) { return _int(value); }
 
-    DB_MAKE_ASSIGN(short, gdb::Type::Int16, 2);
-    DB_MAKE_ASSIGN(unsigned short, gdb::Type::Uint16, 2);
+#define DB_MAKE_ASSIGN_UINT(type) \
+    bool operator=(type value) { return _uint(value); }
 
-#if (UINT_MAX == UINT32_MAX)
-    DB_MAKE_ASSIGN(int, gdb::Type::Int32, 4);
-    DB_MAKE_ASSIGN(unsigned int, gdb::Type::Uint32, 4);
-#else
-    DB_MAKE_ASSIGN(int, gdb::Type::Int16, 2);
-    DB_MAKE_ASSIGN(unsigned int, gdb::Type::Uint16, 2);
-#endif
-
-    DB_MAKE_ASSIGN(long, gdb::Type::Int32, 4);
-    DB_MAKE_ASSIGN(unsigned long, gdb::Type::Uint32, 4);
+    DB_MAKE_ASSIGN_UINT(bool);
+    DB_MAKE_ASSIGN_UINT(char);
+    DB_MAKE_ASSIGN_INT(signed char);
+    DB_MAKE_ASSIGN_UINT(unsigned char);
+    DB_MAKE_ASSIGN_INT(short);
+    DB_MAKE_ASSIGN_UINT(unsigned short);
+    DB_MAKE_ASSIGN_INT(int);
+    DB_MAKE_ASSIGN_UINT(unsigned int);
+    DB_MAKE_ASSIGN_INT(long);
+    DB_MAKE_ASSIGN_UINT(unsigned long);
 
 #ifndef DB_NO_INT64
-    DB_MAKE_ASSIGN(long long, gdb::Type::Int64, 8);
-    DB_MAKE_ASSIGN(unsigned long long, gdb::Type::Uint64, 8);
+    bool operator=(long long value) {
+        return _hook(_db, gdb::Type::Int64, _hash, &value, 8);
+    }
+    bool operator=(unsigned long long value) {
+        return _hook(_db, gdb::Type::Uint64, _hash, &value, 8);
+    }
 #endif
 
-    DB_MAKE_ASSIGN(float, gdb::Type::Float, 4);
+    // float
+    bool operator=(float value) {
+        return _hook(_db, gdb::Type::Float, _hash, &value, 4);
+    }
     bool operator=(double value) {
         return *this = (float)value;
     }
@@ -69,6 +69,13 @@ class Access : public Entry {
     size_t _hash;
     void* _db;
     setHook _hook;
+
+    bool _int(int32_t v) {
+        return _hook(_db, gdb::Type::Int, _hash, &v, 4);
+    }
+    bool _uint(uint32_t v) {
+        return _hook(_db, gdb::Type::Uint, _hash, &v, 4);
+    }
 };
 
 }  // namespace gdb
