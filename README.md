@@ -102,8 +102,8 @@ bool set(size_t hash, DATA data);
 bool set(const Text& key hash, DATA data);
 
 // инициализировать данные (создать ячейку и записать, если её нет). DATA - любой тип данных
-bool set(size_t hash, DATA data);
-bool set(const Text& key hash, DATA data);
+bool init(size_t hash, DATA data);
+bool init(const Text& key hash, DATA data);
 ```
 
 ### GyverDBFile
