@@ -185,8 +185,6 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     // ================== SET ==================
     bool set(size_t hash, const GyverDB& value) = delete;
     bool set(const Text& key, const GyverDB& value) = delete;
-    bool set(size_t hash, const String& value) = delete;
-    bool set(const Text& key, const String& value) = delete;
 
     // bin
     bool set(size_t hash, const void* value, size_t len) { return _set(gdb::Type::Bin, hash, value, len); }
@@ -236,6 +234,8 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     bool set(const Text& key, unsigned long long value) { return set(key.hash(), value); }
 
     // ===================== INIT =====================
+    bool init(size_t hash, const GyverDB& value) = delete;
+    bool init(const Text& key, const GyverDB& value) = delete;
 
     // bin
     bool init(size_t hash, const void* value, size_t len) { return _set(gdb::Type::Bin, hash, value, len, true); }
