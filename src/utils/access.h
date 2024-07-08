@@ -65,8 +65,6 @@ class Access : public Entry {
         return _hook(_db, gdb::Type::String, _hash, value, strlen(value));
     }
 
-    bool operator=(const GyverDB& value) = delete;
-
    private:
     size_t _hash;
     void* _db;
