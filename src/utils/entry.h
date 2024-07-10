@@ -6,7 +6,7 @@
 
 namespace gdb {
 
-class Entry : protected block_t, public Text {
+class Entry : protected block_t, public Text, public Converter {
    public:
     using block_t::buffer;
     using block_t::isValidString;
@@ -16,7 +16,7 @@ class Entry : protected block_t, public Text {
     using block_t::type;
 
     Entry() {}
-    Entry(const block_t& b) : block_t(b), Text(isValidString() ? (const char*)buffer() : nullptr, size()) {}
+    Entry(const block_t& b) : block_t(b), Text(isValidString() ? (const char*)buffer() : nullptr, size()), Converter(type(), buffer(), size()) {}
 
     // тип записи
     gdb::Type type() const {
@@ -63,37 +63,41 @@ class Entry : protected block_t, public Text {
         return 0;
     }
 
-    Value toText() const {
-        return Converter(type(), buffer(), size()).toValue();
-    }
-
     bool addString(String& s) const {  // override
         toText().addString(s);
         return 1;
     }
 
+    String toString() const {
+        return Converter::toString();
+    }
+
     bool toBool() const {
-        return Converter(type(), buffer(), size()).toBool();
+        return Converter::toBool();
     }
 
     int32_t toInt() const {
-        return Converter(type(), buffer(), size()).toInt();
+        return Converter::toInt();
     }
 
     int16_t toInt16() const {
-        return Converter(type(), buffer(), size()).toInt();
+        return Converter::toInt16();
     }
 
     int32_t toInt32() const {
-        return Converter(type(), buffer(), size()).toInt();
+        return Converter::toInt32();
     }
 
     int64_t toInt64() const {
-        return Converter(type(), buffer(), size()).toInt64();
+        return Converter::toInt64();
     }
 
-    double toFloat() const {
-        return Converter(type(), buffer(), size()).toFloat();
+    float toFloat() const {
+        return Converter::toFloat();
+    }
+
+    Value toText() const {
+        return Converter::toText();
     }
 
     // ======================= CAST =======================

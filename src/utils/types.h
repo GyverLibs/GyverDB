@@ -29,6 +29,7 @@ enum class Type : uint32_t {
 
 class Converter {
    public:
+    Converter() {}
     Converter(Type type, const void* p, size_t len) : type(type), p(p), len(len) {}
 
     static bool isDynamic(Type type) {
@@ -121,6 +122,14 @@ class Converter {
         return 0;
     }
 
+    int16_t toInt16() const {
+        return toInt();
+    }
+
+    int32_t toInt32() const {
+        return toInt();
+    }
+
     int64_t toInt64() const {
         if (!p) return 0;
         switch (type) {
@@ -154,7 +163,7 @@ class Converter {
         return toInt();
     }
 
-    Value toValue() const {
+    Value toText() const {
         if (!p) return Value();
         switch (type) {
             case Type::Int:
@@ -183,9 +192,9 @@ class Converter {
     }
 
    private:
-    Type type;
-    const void* p;
-    size_t len;
+    Type type = Type::None;
+    const void* p = nullptr;
+    size_t len = 0;
 };
 
 }  // namespace gdb

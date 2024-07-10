@@ -148,7 +148,7 @@ class block_t {
                 Converter conv(ntype, value, len);
                 switch (type()) {
                     case Type::String: {
-                        Value v = conv.toValue();
+                        Value v = conv.toText();
                         return compareAndUpdate(v.str(), v.length());
                     }
                     case Type::Int:
