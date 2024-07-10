@@ -80,6 +80,14 @@ class Entry : protected block_t, public Text {
         return Converter(type(), buffer(), size()).toInt();
     }
 
+    int16_t toInt16() const {
+        return Converter(type(), buffer(), size()).toInt();
+    }
+
+    int32_t toInt32() const {
+        return Converter(type(), buffer(), size()).toInt();
+    }
+
     int64_t toInt64() const {
         return Converter(type(), buffer(), size()).toInt64();
     }
