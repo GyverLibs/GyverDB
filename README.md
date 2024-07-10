@@ -19,6 +19,7 @@
 Совместима со всеми Arduino платформами (используются Arduino-функции)
 
 ### Зависимости
+- [StreamIO](https://github.com/GyverLibs/StreamIO)
 - [GTL](https://github.com/GyverLibs/GTL) v1.0.6+
 - [StringUtils](https://github.com/GyverLibs/StringUtils) v1.4.15+
 

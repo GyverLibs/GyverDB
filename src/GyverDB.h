@@ -1,12 +1,12 @@
 #pragma once
 #include <Arduino.h>
 #include <GTL.h>
+#include <StreamIO.h>
 #include <StringUtils.h>
 
 #include "utils/access.h"
 #include "utils/block.h"
 #include "utils/entry.h"
-#include "utils/utils.h"
 
 // #define DB_NO_UPDATES  // убрать стек обновлений
 // #define DB_NO_FLOAT    // убрать поддержку float
@@ -84,22 +84,22 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
 
     // экспортировать БД в Stream (напр. файл)
     bool writeTo(Stream& stream) {
-        return writeTo(gdb::Writer(stream));
+        return writeTo(Writer(stream));
     }
 
     // экспортировать БД в буфер размера writeSize()
     bool writeTo(uint8_t* buffer) {
-        return writeTo(gdb::Writer(buffer));
+        return writeTo(Writer(buffer));
     }
 
     // импортировать БД из Stream (напр. файл)
     bool readFrom(Stream& stream, size_t len) {
-        return readFrom(gdb::Reader(stream, len));
+        return readFrom(Reader(stream, len));
     }
 
     // импортировать БД из буфера
     bool readFrom(const uint8_t* buffer, size_t len) {
-        return readFrom(gdb::Reader(buffer, len));
+        return readFrom(Reader(buffer, len));
     }
 
     // создать запись. Если существует - перезаписать пустой с новым типом
@@ -374,42 +374,42 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         return pos_t{low, false};
     }
 
-    bool writeTo(gdb::Writer writer) {
+    bool writeTo(Writer writer) {
         // [bd len] [hash32, value32] [hash32, size16, data...]
         uint16_t len = length();
-        writer.write2(len);
+        writer.write(len);
 
         for (size_t i = 0; i < length(); i++) {
             if (!_buf[i].valid()) continue;
             if (_buf[i].isDynamic()) {
                 if (!_buf[i].ptr()) continue;
-                writer.write4(_buf[i].typehash);
+                writer.write(_buf[i].typehash);
                 uint16_t size = _buf[i].size();
-                writer.write2(size);
+                writer.write(size);
                 writer.write(_buf[i].buffer(), size);
             } else {
-                writer.write4(_buf[i].typehash);
-                writer.write4(_buf[i].data);
+                writer.write(_buf[i].typehash);
+                writer.write(_buf[i].data);
             }
         }
         return writer.writed() == writeSize();
     }
 
-    bool readFrom(gdb::Reader reader) {
+    bool readFrom(Reader reader) {
         clear();
         uint16_t len = 0;
-        if (!reader.read2(len)) return 0;
+        if (!reader.read(len)) return 0;
         reserve(len);
 
         while (reader.available()) {
             uint32_t typehash;
-            if (!reader.read4(typehash)) return 0;
+            if (!reader.read(typehash)) return 0;
 
             gdb::block_t block;
             block.typehash = typehash;
             if (block.isDynamic()) {
                 uint16_t size;
-                if (!reader.read2(size)) return 0;
+                if (!reader.read(size)) return 0;
                 if (!block.reserve(size)) return 0;
                 if (!reader.read(block.buffer(), size)) {
                     block.reset();
@@ -417,7 +417,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
                 }
                 block.setSize(size);
             } else {
-                if (!reader.read4(block.data)) return 0;
+                if (!reader.read(block.data)) return 0;
             }
 
             if (!push(block)) {
