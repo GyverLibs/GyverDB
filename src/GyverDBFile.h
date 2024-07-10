@@ -38,6 +38,7 @@ class GyverDBFile : public GyverDB {
 
     // обновить данные в файле
     bool update() {
+        _changed = false;
         File file = _fs->open(_path, "w");
         return file ? writeTo(file) : 0;
     }

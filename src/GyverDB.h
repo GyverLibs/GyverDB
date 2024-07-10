@@ -338,10 +338,10 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         _useUpdates = gdb._useUpdates;
         _changed = 1;
     }
+    bool _changed = false;
 
    private:
     bool _keepTypes = true;
-    bool _changed = false;
     bool _useUpdates = false;
 
 #ifndef DB_NO_UPDATES
