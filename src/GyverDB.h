@@ -5,6 +5,7 @@
 #include <StringUtils.h>
 
 #include "utils/access.h"
+#include "utils/anytype.h"
 #include "utils/block.h"
 #include "utils/entry.h"
 
@@ -14,6 +15,12 @@
 // #define DB_NO_CONVERT  // не конвертировать данные (принудительно менять тип записи, keepTypes не работает)
 
 class GyverDB : private gtl::stack_uniq<gdb::block_t> {
+    enum class Putmode {
+        Set,
+        Init,
+        Update,
+    };
+
    public:
     using gtl::stack_uniq<gdb::block_t>::length;
     using gtl::stack_uniq<gdb::block_t>::capacity;
@@ -183,107 +190,18 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     }
 
     // ================== SET ==================
-    bool set(size_t hash, const GyverDB& value) = delete;
-    bool set(const Text& key, const GyverDB& value) = delete;
+    bool set(size_t hash, gdb::AnyType val) { return _put(hash, val, Putmode::Set); }
+    bool set(const Text& key, gdb::AnyType val) { return _put(key.hash(), val, Putmode::Set); }
 
-    // bin
-    bool set(size_t hash, const void* value, size_t len) { return _set(gdb::Type::Bin, hash, value, len); }
-    bool set(const Text& key, const void* value, size_t len) { return set(key.hash(), value, len); }
-    template <typename T>
-    bool set(size_t hash, const T& value) { return set(hash, &value, sizeof(T)); }
-    template <typename T>
-    bool set(const Text& key, const T& value) { return set<T>(key.hash(), value); }
+    // ================== INIT ==================
+    bool init(size_t hash, gdb::AnyType val) { return _put(hash, val, Putmode::Init); }
+    bool init(const Text& key, gdb::AnyType val) { return _put(key.hash(), val, Putmode::Init); }
 
-    // float
-    bool set(size_t hash, float value) { return _set(gdb::Type::Float, hash, &value, 4); }
-    bool set(const Text& key, float value) { return set(key.hash(), value); }
-    bool set(size_t hash, double value) { return set(hash, (float)value); }
-    bool set(const Text& key, double value) { return set(key.hash(), value); }
+    // ================== UPDATE ==================
+    bool update(size_t hash, gdb::AnyType val) { return _put(hash, val, Putmode::Update); }
+    bool update(const Text& key, gdb::AnyType val) { return _put(key.hash(), val, Putmode::Update); }
 
-    // string
-    bool set(size_t hash, const Text& value) { return _set(gdb::Type::String, hash, value.str(), value.length()); }
-    bool set(const Text& key, const Text& value) { return set(key.hash(), value); }
-    bool set(size_t hash, const char* value) { return set(hash, Text(value)); }
-    bool set(const Text& key, const char* value) { return set(key.hash(), value); }
-    bool set(size_t hash, const String& value) { return set(hash, Text(value)); }
-    bool set(const Text& key, const String& value) { return set(key.hash(), value); }
-
-    // int
-#define DB_MAKE_INT(type)                                              \
-    bool set(size_t hash, type value) { return _setInt(hash, value); } \
-    bool set(const Text& key, type value) { return _setInt(key.hash(), value); }
-
-#define DB_MAKE_UINT(type)                                              \
-    bool set(size_t hash, type value) { return _setUint(hash, value); } \
-    bool set(const Text& key, type value) { return _setUint(key.hash(), value); }
-
-    DB_MAKE_UINT(bool)
-    DB_MAKE_UINT(char)
-    DB_MAKE_INT(signed char)
-    DB_MAKE_UINT(unsigned char)
-    DB_MAKE_INT(short)
-    DB_MAKE_UINT(unsigned short)
-    DB_MAKE_INT(int)
-    DB_MAKE_UINT(unsigned int)
-    DB_MAKE_INT(long)
-    DB_MAKE_UINT(unsigned long)
-
-    bool set(size_t hash, long long value) { return _set(gdb::Type::Int64, hash, &value, 8); }
-    bool set(const Text& key, long long value) { return set(key.hash(), value); }
-    bool set(size_t hash, unsigned long long value) { return _set(gdb::Type::Uint64, hash, &value, 8); }
-    bool set(const Text& key, unsigned long long value) { return set(key.hash(), value); }
-
-    // ===================== INIT =====================
-    bool init(size_t hash, const GyverDB& value) = delete;
-    bool init(const Text& key, const GyverDB& value) = delete;
-
-    // bin
-    bool init(size_t hash, const void* value, size_t len) { return _set(gdb::Type::Bin, hash, value, len, true); }
-    bool init(const Text& key, const void* value, size_t len) { return init(key.hash(), value, len); }
-    template <typename T>
-    bool init(size_t hash, const T& value) { return init(hash, &value, sizeof(T)); }
-    template <typename T>
-    bool init(const Text& key, const T& value) { return init<T>(key.hash(), value); }
-
-    // float
-    bool init(size_t hash, float value) { return _set(gdb::Type::Float, hash, &value, 4, true); }
-    bool init(const Text& key, float value) { return init(key.hash(), value); }
-    bool init(size_t hash, double value) { return init(hash, (float)value); }
-    bool init(const Text& key, double value) { return init(key.hash(), value); }
-
-    // string
-    bool init(size_t hash, const Text& value) { return _set(gdb::Type::String, hash, value.str(), value.length(), true); }
-    bool init(const Text& key, const Text& value) { return init(key.hash(), value); }
-    bool init(size_t hash, const char* value) { return init(hash, Text(value)); }
-    bool init(const Text& key, const char* value) { return init(key.hash(), value); }
-    bool init(size_t hash, const String& value) { return init(hash, Text(value)); }
-    bool init(const Text& key, const String& value) { return init(key.hash(), value); }
-
-    // int
-#define DB_MAKE_INIT_INT(type)                                                \
-    bool init(size_t hash, type value) { return _setInt(hash, value, true); } \
-    bool init(const Text& key, type value) { return _setInt(key.hash(), value, true); }
-
-#define DB_MAKE_INIT_UINT(type)                                                \
-    bool init(size_t hash, type value) { return _setUint(hash, value, true); } \
-    bool init(const Text& key, type value) { return _setUint(key.hash(), value, true); }
-
-    DB_MAKE_INIT_UINT(bool)
-    DB_MAKE_INIT_UINT(char)
-    DB_MAKE_INIT_INT(signed char)
-    DB_MAKE_INIT_UINT(unsigned char)
-    DB_MAKE_INIT_INT(short)
-    DB_MAKE_INIT_UINT(unsigned short)
-    DB_MAKE_INIT_INT(int)
-    DB_MAKE_INIT_UINT(unsigned int)
-    DB_MAKE_INIT_INT(long)
-    DB_MAKE_INIT_UINT(unsigned long)
-
-    bool init(size_t hash, long long value) { return _set(gdb::Type::Int64, hash, &value, 8, true); }
-    bool init(const Text& key, long long value) { return init(key.hash(), value); }
-    bool init(size_t hash, unsigned long long value) { return _set(gdb::Type::Uint64, hash, &value, 8, true); }
-    bool init(const Text& key, unsigned long long value) { return init(key.hash(), value); }
-
+    // ===================== MISC =====================
     // move
     GyverDB(GyverDB& gdb) {
         move(gdb);
@@ -322,8 +240,8 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     virtual bool tick() { return 0; }
 
     // hook
-    static bool setHook(void* self, gdb::Type type, size_t hash, const void* value, size_t len) {
-        return ((GyverDB*)self)->_set(type, hash, value, len);
+    static bool setHook(void* db, size_t hash, gdb::AnyType& val) {
+        return ((GyverDB*)db)->_put(hash, val, Putmode::Set);
     }
 
    protected:
@@ -429,22 +347,20 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         return 1;
     }
 
-    bool _setInt(size_t hash, int32_t value, bool noupd = false) {
-        return _set(gdb::Type::Int, hash, &value, 4, noupd);
-    }
-    bool _setUint(size_t hash, uint32_t value, bool noupd = false) {
-        return _set(gdb::Type::Uint, hash, &value, 4, noupd);
+    bool _put(size_t hash, const gdb::AnyType& val, Putmode mode) {
+        return _put(val.type, hash, val.ptr, val.len, mode);
     }
 
-    bool _set(gdb::Type type, size_t hash, const void* value, size_t len, bool noupdate = false) {
+    bool _put(gdb::Type type, size_t hash, const void* value, size_t len, Putmode mode) {
         pos_t pos = _search(hash);
         if (pos.exists) {
-            if (noupdate) return 1;
+            if (mode == Putmode::Init) return 0;
             if (_buf[pos.idx].update(type, value, len, _keepTypes)) {
                 _setChanged(hash);
                 return 1;
             }
         } else {
+            if (mode == Putmode::Update) return 0;
             gdb::block_t block(type, hash);
             if (block.write(value, len)) {
                 if (insert(pos.idx, block)) {

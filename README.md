@@ -98,13 +98,17 @@ void remove(const Text& key);
 bool has(size_t hash);
 bool has(const Text& key);
 
-// записать данные. DATA - любой тип данных
+// записать данные (создать ячейку, если не существует). DATA - любой тип данных
 bool set(size_t hash, DATA data);
 bool set(const Text& key hash, DATA data);
 
-// инициализировать данные (создать ячейку и записать, если её нет). DATA - любой тип данных
+// инициализировать данные (создать ячейку и записать, если ячейка не существует). DATA - любой тип данных
 bool init(size_t hash, DATA data);
 bool init(const Text& key hash, DATA data);
+
+// обновить данные (если ячейка существует). DATA - любой тип данных
+bool update(size_t hash, DATA data);
+bool update(const Text& key hash, DATA data);
 ```
 
 ### GyverDBFile
