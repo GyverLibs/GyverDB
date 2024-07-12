@@ -27,10 +27,6 @@ class Entry : protected block_t, public Text, public Converter {
         return block_t::valid();
     }
 
-    explicit operator bool() const {
-        return block_t::valid();
-    }
-
     size_t printTo(Print& p) const {  // override
         if (type() == gdb::Type::Bin) {
             size_t ret = 0;
@@ -125,7 +121,7 @@ class Entry : protected block_t, public Text, public Converter {
         return (type)func() <= v;         \
     }
 
-    // DB_MAKE_OPERATOR(bool, toBool)
+    DB_MAKE_OPERATOR(bool, toBool)
     DB_MAKE_OPERATOR(char, toInt)
     DB_MAKE_OPERATOR(signed char, toInt)
     DB_MAKE_OPERATOR(unsigned char, toInt)
