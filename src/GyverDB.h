@@ -348,21 +348,17 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     }
 
     bool _put(size_t hash, const gdb::AnyType& val, Putmode mode) {
-        return _put(val.type, hash, val.ptr, val.len, mode);
-    }
-
-    bool _put(gdb::Type type, size_t hash, const void* value, size_t len, Putmode mode) {
         pos_t pos = _search(hash);
         if (pos.exists) {
             if (mode == Putmode::Init) return 0;
-            if (_buf[pos.idx].update(type, value, len, _keepTypes)) {
+            if (_buf[pos.idx].update(val.type, val.ptr, val.len, _keepTypes)) {
                 _setChanged(hash);
                 return 1;
             }
         } else {
             if (mode == Putmode::Update) return 0;
-            gdb::block_t block(type, hash);
-            if (block.write(value, len)) {
+            gdb::block_t block(val.type, hash);
+            if (block.write(val.ptr, val.len)) {
                 if (insert(pos.idx, block)) {
                     _changed = 1;
                     return 1;
