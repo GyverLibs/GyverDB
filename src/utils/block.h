@@ -54,22 +54,14 @@ class block_t {
     // тип записи как pgm строка
     const __FlashStringHelper* typeRead() const {
         switch (type()) {
-            case Type::Bin:
-                return F("Bin");
-            case Type::Int:
-                return F("Int");
-            case Type::Uint:
-                return F("Uint");
-            case Type::Int64:
-                return F("Int64");
-            case Type::Uint64:
-                return F("Uint64");
-            case Type::Float:
-                return F("Float");
-            case Type::String:
-                return F("String");
-            default:
-                break;
+            case Type::Bin: return F("Bin");
+            case Type::Int: return F("Int");
+            case Type::Uint: return F("Uint");
+            case Type::Int64: return F("Int64");
+            case Type::Uint64: return F("Uint64");
+            case Type::Float: return F("Float");
+            case Type::String: return F("String");
+            default: break;
         }
         return F("None");
     }
@@ -141,7 +133,7 @@ class block_t {
         if (!valid() || ntype == Type::None) return 0;
 
         if (type() == ntype) {
-            return compareAndUpdate(value, len);//!!!!!!!!!
+            return compareAndUpdate(value, len);  //!!!!!!!!!
         } else {
 #ifndef DB_NO_CONVERT
             if (keepType) {
@@ -225,12 +217,9 @@ class block_t {
     // скорректировать длину
     size_t realLen(size_t len) const {
         switch (type()) {
-            case Type::Bin:
-                return len + 2;
-            case Type::String:
-                return len + 2 + 1;
-            default:
-                break;
+            case Type::Bin: return len + 2;
+            case Type::String: return len + 2 + 1;
+            default: break;
         }
         return len;
     }
