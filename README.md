@@ -182,7 +182,6 @@ bool writeTo(T& dest);
 Value toText();
 String toString();
 bool toBool();
-int toInt();
 int32_t toInt();
 int64_t toInt64();
 double toFloat();
