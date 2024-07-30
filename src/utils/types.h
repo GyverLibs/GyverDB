@@ -1,5 +1,6 @@
 #pragma once
 #include <Arduino.h>
+#include <FOR_MACRO.h>
 #include <StringUtils.h>
 
 #define DB_TYPE_SIZE (3ul)
@@ -11,8 +12,13 @@
 #define DB_MAKE_TYPEHASH(t, h) ((uint32_t)t | (h & DB_HASH_MASK))
 #define DB_REPLACE_TYPE(x, t) ((x & ~(DB_TYPE_MASK)) | (uint32_t)t)
 
-#define DB_KEY(name) name = SH(#name) & DB_HASH_MASK
-#define DB_KEYS(name, ...) enum name : size_t { __VA_ARGS__ };
+// #define DB_KEY(name) name = SH(#name) & DB_HASH_MASK
+// #define DB_KEYS(name, ...) enum name : size_t { __VA_ARGS__ };
+
+#define DB_KEY(name) name
+#define _DB_KEY(N, i, p, val) val = (SH(#val) & DB_HASH_MASK),
+
+#define DB_KEYS(name, ...) enum name : size_t { FOR_MACRO(_DB_KEY, 0, __VA_ARGS__) };
 
 namespace gdb {
 
