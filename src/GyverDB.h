@@ -150,7 +150,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
             size_t hash = _buf[i].keyHash();
             bool found = false;
             for (size_t h = 0; h < len; h++) {
-                if (hash == hashes[h] & DB_HASH_MASK) {
+                if (hash == (hashes[h] & DB_HASH_MASK)) {
                     i++;
                     found = true;
                     break;
