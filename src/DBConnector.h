@@ -41,7 +41,7 @@ class DBConnector {
         _tout = timeout * 1000ul;
     }
 
-    // очищать SSID в БД при неудачном подключении
+    // очищать SSID в БД при неудачном подключении (умолч. выкл)
     void resetSSIDOnFail(bool res) {
         _resetSSID = res;
     }
