@@ -43,7 +43,7 @@ class DBConnector {
 
     // очищать SSID в БД при неудачном подключении
     void resetSSIDOnFail(bool res) {
-        _resetSSID(res);
+        _resetSSID = res;
     }
 
     // автоматически отключать AP при подключении к STA (умолч. вкл)
