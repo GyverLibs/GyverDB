@@ -316,6 +316,21 @@ DBConnector(GyverDBFile* db,
             uint32_t timeout = 60,
             bool resetSSID = false);
 
+// установить имя AP
+void setName(const String& APname);
+
+// установить пароль AP
+void setPass(const String& APpass);
+
+// установить таймаут в секундах
+void setTimeout(uint16_t timeout);
+
+// очищать SSID в БД при неудачном подключении
+void resetSSIDOnFail(bool res);
+
+// автоматически отключать AP при подключении к STA (умолч. вкл)
+void cloasAP(bool closeAP);
+
 // прдключить обработчик успешного подключения
 void onConnect(ConnectCallback cb);
 
