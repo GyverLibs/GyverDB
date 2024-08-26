@@ -165,7 +165,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
 
     // вывести все ключи в массив длиной length()
     void getKeys(size_t* hashes) {
-        for (size_t i = 0; i < len; i++) {
+        for (size_t i = 0; i < _len; i++) {
             hashes[i] = _buf[i].keyHash();
         }
     }
