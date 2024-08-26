@@ -90,9 +90,15 @@ void clear();
 // удалить из БД записи, ключей которых нет в переданном списке
 void cleanup(size_t* hashes, size_t len);
 
+// вывести все ключи в массив длиной length()
+void getKeys(size_t* hashes);
+
 // получить запись
 gdb::Entry get(size_t hash);
 gdb::Entry get(const Text& key);
+
+// получить запись по порядку
+gdb::Entry getN(int idx);
 
 // удалить запись
 void remove(size_t hash);
