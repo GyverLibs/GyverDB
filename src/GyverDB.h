@@ -196,7 +196,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
 
     // получить запись по порядку
     gdb::Entry getN(int idx) {
-        return (idx < _len) ? gdb::Entry(_buf[idx]) : gdb::Entry();
+        return (idx < (int)_len) ? gdb::Entry(_buf[idx]) : gdb::Entry();
     }
 
     // удалить запись
