@@ -11,10 +11,10 @@ DB_KEYS(keys,
 void setup() {
     Serial.begin(115200);
 
-    db["bool"_h] = true;
-    db[keys::key1] = 1234;
-    db[SH("intval")] = -12321;
-    db["uintval"] = 12345;
+    db["bool"_h] = true;       // хеш _h
+    db[keys::key1] = 1234;     // хеш из enum
+    db[SH("intval")] = -12321; // SH(хеш)
+    db["uintval"] = 12345;     // просто строка
     db["u64"] = 123456789876ULL;
     db["i64"] = -12345678987654321LL;
     db["fl"] = 3.14;
