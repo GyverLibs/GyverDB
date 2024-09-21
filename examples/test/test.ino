@@ -5,7 +5,7 @@ GyverDB db;
 
 DB_KEYS(keys,
     key1,
-    arr,
+    arr  // последнюю запятую не ставим
 );
 
 void setup() {
