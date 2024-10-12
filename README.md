@@ -146,7 +146,7 @@ bool tick();
 ```cpp
 #include <LittleFS.h>
 #include <GyverDBFile.h>
-GyverDBFile db(&LittleFS, "db.bin");
+GyverDBFile db(&LittleFS, "/db.bin");
 
 void setup() {
     LittleFS.begin();
