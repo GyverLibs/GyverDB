@@ -116,7 +116,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
             gdb::block_t block(type, hash);
             if (!block.init(reserve)) return 0;
             if (insert(pos.idx, block)) {
-                _changed = 1;
+                _changed = true;
                 return 1;
             } else {
                 block.reset();
@@ -141,7 +141,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     // стереть все записи (не освобождает зарезервированное место)
     void clear() {
         while (length()) pop().reset();
-        _changed = 1;
+        _changed = true;
     }
 
     // удалить из БД записи, ключей которых нет в переданном списке
@@ -158,7 +158,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
             }
             if (!found) {
                 gtl::stack_uniq<gdb::block_t>::remove(i);
-                _changed = 1;
+                _changed = true;
             }
         }
     }
@@ -170,9 +170,14 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         }
     }
 
-    // было изменение данных. После срабатывания сбросится в false
+    // было изменение бд
     bool changed() {
-        return _changed ? _changed = 0, true : false;
+        return _changed;
+    }
+
+    // сбросить флаг изменения бд
+    void clearChanged() {
+        _changed = false;
     }
 
     // полный вес БД
@@ -205,7 +210,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         if (pos.exists) {
             _buf[pos.idx].reset();
             gtl::stack_uniq<gdb::block_t>::remove(pos.idx);
-            _changed = 1;
+            _changed = true;
         }
     }
     void remove(const Text& key) {
@@ -285,7 +290,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
 #endif
         _keepTypes = gdb._keepTypes;
         _useUpdates = gdb._useUpdates;
-        _changed = 1;
+        _changed = true;
     }
     bool _changed = false;
 
@@ -373,7 +378,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
                 block.reset();
                 return 0;
             }
-            // _changed = 1;
+            // _changed = true;
         }
         return 1;
     }
@@ -391,7 +396,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
             gdb::block_t block(val.type, hash);
             if (block.write(val.ptr, val.len)) {
                 if (insert(pos.idx, block)) {
-                    _changed = 1;
+                    _changed = true;
                     return 1;
                 } else {
                     block.reset();

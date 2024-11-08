@@ -36,8 +36,10 @@ class GyverDBFile : public GyverDB {
         return 0;
     }
 
-    // обновить данные в файле
+    // обновить данные в файле, если было изменение БД. Вернёт true при успешной записи
     bool update() {
+        _updFlag = false;
+        if (!_changed) return false;
         _changed = false;
         File file = _fs->open(_path, "w");
         return file ? writeTo(file) : 0;
@@ -45,12 +47,11 @@ class GyverDBFile : public GyverDB {
 
     // тикер, вызывать в loop. Сам обновит данные при изменении и выходе таймаута, вернёт true
     bool tick() {
-        if (changed()) {
+        if (_changed && !_updFlag) {
+            _updFlag = true;
             _tmr = millis();
-            if (!_tmr) _tmr = 1;
         }
-        if (_tmr && millis() - _tmr >= _tout) {
-            _tmr = 0;
+        if (_updFlag && millis() - _tmr >= _tout) {
             update();
             return 1;
         }
@@ -61,6 +62,5 @@ class GyverDBFile : public GyverDB {
     fs::FS* _fs;
     const char* _path;
     uint32_t _tmr = 0, _tout = 10000;
-
-    using GyverDB::changed;
+    bool _updFlag = false;
 };

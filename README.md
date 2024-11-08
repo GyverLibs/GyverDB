@@ -54,8 +54,11 @@ void keepTypes(bool keep);
 // использовать стек обновлений (умолч. false)
 void useUpdates(bool use);
 
-// было изменение данных. После срабатывания сбросится в false
+// было изменение бд
 bool changed();
+
+// сбросить флаг изменения бд
+void clearChanged();
 
 // вывести всё содержимое БД
 void dump(Print& p);
@@ -135,7 +138,7 @@ void setTimeout(uint32_t tout = 10000);
 // прочитать данные
 bool begin();
 
-// обновить данные в файле сейчас
+// обновить данные в файле, если было изменение БД. Вернёт true при успешной записи
 bool update();
 
 // тикер, вызывать в loop. Сам обновит данные при изменении и выходе таймаута, вернёт true
@@ -146,7 +149,7 @@ bool tick();
 ```cpp
 #include <LittleFS.h>
 #include <GyverDBFile.h>
-GyverDBFile db(&LittleFS, "/db.bin");
+GyverDBFile db(&LittleFS, "db.bin");
 
 void setup() {
     LittleFS.begin();
@@ -245,7 +248,7 @@ enum keys : size_t {
 DB_KEYS(keys,
     key1,
     key2,
-    mykey  // последнюю запятую ставить нельзя
+    mykey,
 );
 ```
 Он развернётся в такой же хэш-enum как в примере выше.
