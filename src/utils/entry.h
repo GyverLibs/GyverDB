@@ -16,7 +16,7 @@ class Entry : protected block_t, public Text, public Converter {
     using block_t::type;
 
     Entry() {}
-    Entry(const block_t& b) : block_t(b), Text(isValidString() ? (const char*)buffer() : nullptr, size()), Converter(type(), buffer(), size()) {}
+    Entry(const block_t& b) : block_t(b), Text(b.isValidString() ? (const char*)b.buffer() : nullptr, b.size()), Converter(b.type(), b.buffer(), b.size()) {}
 
     // тип записи
     gdb::Type type() const {
