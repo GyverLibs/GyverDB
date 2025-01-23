@@ -7,7 +7,7 @@
 
 namespace gdb {
 
-typedef bool (*setHook)(void* db, size_t hash, AnyType& val);
+typedef bool (*setHook)(void* db, size_t hash, const AnyType& val);
 
 class Access : public Entry {
    public:
@@ -15,6 +15,86 @@ class Access : public Entry {
 
     bool operator=(AnyType value) {
         return _hook(_db, _hash, value);
+    }
+
+    // incr decr
+    template <typename T>
+    T operator++() {
+        T value = (T)(*this) + 1;
+        _hook(_db, _hash, AnyType(value));
+        return value;
+    }
+
+    template <typename T>
+    T operator++(T) {
+        T value = (T)(*this) + 1;
+        _hook(_db, _hash, AnyType(value));
+        return value;
+    }
+
+    template <typename T>
+    T operator--() {
+        T value = (T)(*this) - 1;
+        _hook(_db, _hash, AnyType(value));
+        return value;
+    }
+
+    template <typename T>
+    T operator--(T) {
+        T value = (T)(*this) - 1;
+        _hook(_db, _hash, AnyType(value));
+        return value;
+    }
+
+    // compl
+    template <typename T>
+    T operator+=(T value) {
+        value = (T)(*this) + value;
+        _hook(_db, _hash, AnyType(value));
+        return value;
+    }
+
+    template <typename T>
+    T operator-=(T value) {
+        value = (T)(*this) - value;
+        _hook(_db, _hash, AnyType(value));
+        return value;
+    }
+
+    template <typename T>
+    T operator*=(T value) {
+        value = (T)(*this) * value;
+        _hook(_db, _hash, AnyType(value));
+        return value;
+    }
+
+    template <typename T>
+    T operator/=(T value) {
+        value = (T)(*this) / value;
+        _hook(_db, _hash, AnyType(value));
+        return value;
+    }
+
+    template <typename T>
+    T operator%=(T value) {
+        value = (T)(*this) % value;
+        _hook(_db, _hash, AnyType(value));
+        return value;
+    }
+
+    // bin
+    template <typename T>
+    T operator|=(T value) {
+        value = (T)(*this) | value;
+        _hook(_db, _hash, AnyType(value));
+        return value;
+    }
+
+    template <typename T>
+    T operator&=(T value) {
+        value = (T)(*this) & value;
+        _hook(_db, _hash, AnyType(value));
+        return value;
     }
 
    private:

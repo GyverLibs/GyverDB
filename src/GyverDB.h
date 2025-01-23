@@ -113,6 +113,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     bool create(size_t hash, gdb::Type type, uint16_t reserve = 0) {
         pos_t pos = _search(hash);
         if (!pos.exists) {
+            _cache = -1;
             gdb::block_t block(type, hash);
             if (!block.init(reserve)) return 0;
             if (insert(pos.idx, block)) {
@@ -140,12 +141,14 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
 
     // стереть все записи (не освобождает зарезервированное место)
     void clear() {
+        _cache = -1;
         while (length()) pop().reset();
         _changed = true;
     }
 
     // удалить из БД записи, ключей которых нет в переданном списке
     void cleanup(size_t* hashes, size_t len) {
+        _cache = -1;
         for (size_t i = 0; i < _len;) {
             size_t hash = _buf[i].keyHash();
             bool found = false;
@@ -192,8 +195,16 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
 
     // получить запись
     gdb::Entry get(size_t hash) {
-        pos_t pos = _search(hash);
-        return (pos.exists) ? gdb::Entry(_buf[pos.idx]) : gdb::Entry();
+        if (~_cache && _cache_h == hash) return gdb::Entry(_buf[_cache]);
+        else {
+            pos_t pos = _search(hash);
+            if (pos.exists) {
+                _cache = pos.idx;
+                _cache_h = hash;
+                return gdb::Entry(_buf[_cache]);
+            }
+        }
+        return gdb::Entry();
     }
     gdb::Entry get(const Text& key) {
         return get(key.hash());
@@ -208,6 +219,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     void remove(size_t hash) {
         pos_t pos = _search(hash);
         if (pos.exists) {
+            _cache = -1;
             _buf[pos.idx].reset();
             gtl::stack_uniq<gdb::block_t>::remove(pos.idx);
             _changed = true;
@@ -276,7 +288,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     virtual bool tick() { return 0; }
 
     // hook
-    static bool setHook(void* db, size_t hash, gdb::AnyType& val) {
+    static bool setHook(void* db, size_t hash, const gdb::AnyType& val) {
         return ((GyverDB*)db)->_put(hash, val, Putmode::Set);
     }
 
@@ -297,6 +309,8 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
    private:
     bool _keepTypes = true;
     bool _useUpdates = false;
+    int16_t _cache = -1;
+    size_t _cache_h = 0;
 
 #ifndef DB_NO_UPDATES
     gtl::stack_uniq<size_t> _updates;
@@ -392,6 +406,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
                 return 1;
             }
         } else {
+            _cache = -1;
             if (mode == Putmode::Update) return 0;
             gdb::block_t block(val.type, hash);
             if (block.write(val.ptr, val.len)) {
