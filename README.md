@@ -298,6 +298,31 @@ db["arr"].writeTo(arr2);
 // посмотрим что записалось
 db.dump(Serial);
 ```
+```cpp
+// СТРУКТУРЫ
+struct Foo {
+    int a;
+    float b;
+};
+
+// структура
+Foo foo{123, 3.14};
+
+db["struct"_h] = foo;
+
+Serial.println(static_cast<Foo*>(db["struct"_h].buffer())->a);  // 123
+
+Foo& ref = *static_cast<Foo*>(db["struct"_h].buffer());  // 3.14
+Serial.println(ref.b);
+
+// массив структур
+Foo arr[] = {{123, 3.14}, {456, 2.72}};
+db["arr"_h] = arr;
+
+Foo* p = (Foo*)db["arr"_h].buffer();
+Serial.println(p[0].a);  // 123
+Serial.println(p[1].b);  // 2.72
+```
 
 При разработке проекта может оказаться так, что некоторые ключи "устарели" или были переименованы в процессе разработки, и записи по ним уже не нужны. В библиотеке есть возможность провести очистку БД: удалить все лишние записи и оставить только заданный список ключей. Это делается так:
 ```cpp
