@@ -305,11 +305,15 @@ struct Foo {
     float b;
 };
 
-// структура
 Foo foo{123, 3.14};
-
 db["struct"_h] = foo;
 
+// чтение в копию
+Foo foo2;
+db["struct"_h].writeTo(foo2);
+Serial.println(foo2.b);
+
+// чтение напрямую
 Serial.println(static_cast<Foo*>(db["struct"_h].buffer())->a);  // 123
 
 Foo& ref = *static_cast<Foo*>(db["struct"_h].buffer());  // 3.14
