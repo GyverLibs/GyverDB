@@ -400,8 +400,9 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     bool _put(size_t hash, const gdb::AnyType& val, Putmode mode) {
         pos_t pos = _search(hash);
         if (pos.exists) {
-            if (mode == Putmode::Init) return 0;
-            if (_buf[pos.idx].update(val.type, val.ptr, val.len, _keepTypes)) {
+            if (mode == Putmode::Init && _buf[pos.idx].type() == val.type) return 0;
+            
+            if (_buf[pos.idx].update(val.type, val.ptr, val.len, (_keepTypes && mode != Putmode::Init))) {
                 _setChanged(hash);
                 return 1;
             }
