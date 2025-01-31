@@ -12,7 +12,7 @@
 // #define DB_NO_UPDATES  // убрать стек обновлений
 // #define DB_NO_FLOAT    // убрать поддержку float
 // #define DB_NO_INT64    // убрать поддержку int64
-// #define DB_NO_CONVERT  // не конвертировать данные (принудительно менять тип записи, keepTypes не работает)
+// #define DB_NO_CONVERT  // не конвертировать данные (принудительно менять тип ячейки, keepTypes не работает)
 
 class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     enum class Putmode {
@@ -43,7 +43,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         return (*this)[key.hash()];
     }
 
-    // не изменять тип записи (конвертировать данные если тип отличается) (умолч. true)
+    // не изменять тип ячейки (конвертировать данные если тип отличается) (умолч. true)
     void keepTypes(bool keep) {
         _keepTypes = keep;
     }
@@ -109,7 +109,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         return readFrom(Reader(buffer, len));
     }
 
-    // создать запись. Если существует - перезаписать пустой с новым типом
+    // создать ячейку. Если существует - перезаписать пустой с новым типом
     bool create(size_t hash, gdb::Type type, uint16_t reserve = 0) {
         pos_t pos = _search(hash);
         if (!pos.exists) {
@@ -139,14 +139,14 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         gtl::stack_uniq<gdb::block_t>::reset();
     }
 
-    // стереть все записи (не освобождает зарезервированное место)
+    // стереть все ячейки (не освобождает зарезервированное место)
     void clear() {
         _cache = -1;
         while (length()) pop().reset();
         _changed = true;
     }
 
-    // удалить из БД записи, ключей которых нет в переданном списке
+    // удалить из БД ячейки, ключей которых нет в переданном списке
     void cleanup(size_t* hashes, size_t len) {
         _cache = -1;
         for (size_t i = 0; i < _len;) {
@@ -193,7 +193,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         return sz;
     }
 
-    // получить запись
+    // получить ячейку
     gdb::Entry get(size_t hash) {
         if (~_cache && _cache_h == hash) return gdb::Entry(_buf[_cache]);
         else {
@@ -210,12 +210,12 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         return get(key.hash());
     }
 
-    // получить запись по порядку
+    // получить ячейку по порядку
     gdb::Entry getN(int idx) {
         return (idx < (int)_len) ? gdb::Entry(_buf[idx]) : gdb::Entry();
     }
 
-    // удалить запись
+    // удалить ячейку
     void remove(size_t hash) {
         pos_t pos = _search(hash);
         if (pos.exists) {
@@ -229,7 +229,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         remove(key.hash());
     }
 
-    // БД содержит запись с именем
+    // БД содержит ячейку с именем
     bool has(size_t hash) {
         return _search(hash).exists;
     }
