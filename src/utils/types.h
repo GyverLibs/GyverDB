@@ -16,9 +16,12 @@
 // #define DB_KEYS(name, ...) enum name : size_t { __VA_ARGS__ };
 
 #define DB_KEY(name) name
-#define _DB_KEY(N, i, p, val) val = (SH(#val) & DB_HASH_MASK),
 
+#define _DB_KEY(N, i, p, val) val = (SH(#val) & DB_HASH_MASK),
 #define DB_KEYS(name, ...) enum name : size_t { FOR_MACRO(_DB_KEY, 0, __VA_ARGS__) };
+
+#define _DB_INIT(N, i, p, val) p.init val;
+#define DB_INIT(name, ...) FOR_MACRO(_DB_INIT, db, __VA_ARGS__)
 
 namespace gdb {
 
