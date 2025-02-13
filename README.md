@@ -51,9 +51,6 @@ GyverDB(uint16_t reserve = 0);
 // не изменять тип ячейки (конвертировать данные если тип отличается) (умолч. true)
 void keepTypes(bool keep);
 
-// использовать стек обновлений (умолч. false)
-void useUpdates(bool use);
-
 // было изменение бд
 bool changed();
 
@@ -122,6 +119,18 @@ bool init(const Text& key hash, DATA data);
 // обновить данные (если ячейка существует). DATA - любой тип данных
 bool update(size_t hash, DATA data);
 bool update(const Text& key hash, DATA data);
+
+// использовать стек обновлений (умолч. false)
+void useUpdates(bool use);
+
+// есть непрочитанные изменения
+bool updatesAvailable();
+
+// пропустить необработанные обновления
+void skipUpdates();
+
+// получить хеш обновления из стека
+size_t updateNext();
 ```
 
 ### GyverDBFile

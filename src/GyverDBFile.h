@@ -11,6 +11,10 @@ class GyverDBFile : public GyverDB {
         _tout = tout;
     }
 
+    ~GyverDBFile() {
+        update();
+    }
+
     // установить файловую систему и имя файла
     void setFS(fs::FS* nfs, const char* path) {
         _fs = nfs;
@@ -24,34 +28,35 @@ class GyverDBFile : public GyverDB {
 
     // прочитать данные
     bool begin() {
+        bool res = false;
         if (_fs) {
             if (_fs->exists(_path)) {
                 File file = _fs->open(_path, "r");
-                if (file) return readFrom(file, file.size());
+                if (file) res = readFrom(file, file.size());
+                _update = false;
             } else {
                 File file = _fs->open(_path, "w");
-                return 1;
+                res = true;
             }
         }
-        return 0;
+        return res;
     }
 
     // обновить данные в файле, если было изменение БД. Вернёт true при успешной записи
     bool update() {
-        _updFlag = false;
-        if (!_changed) return false;
-        _changed = false;
+        _tmr = 0;
+        if (!_update) return false;
+        _update = false;
         File file = _fs->open(_path, "w");
         return file ? writeTo(file) : 0;
     }
 
     // тикер, вызывать в loop. Сам обновит данные при изменении и выходе таймаута, вернёт true
     bool tick() {
-        if (_changed && !_updFlag) {
-            _updFlag = true;
+        if (_update && !_tmr) {
             _tmr = millis();
         }
-        if (_updFlag && millis() - _tmr >= _tout) {
+        if (_tmr && millis() - _tmr >= _tout) {
             update();
             return 1;
         }
@@ -62,5 +67,4 @@ class GyverDBFile : public GyverDB {
     fs::FS* _fs;
     const char* _path;
     uint32_t _tmr = 0, _tout = 10000;
-    bool _updFlag = false;
 };

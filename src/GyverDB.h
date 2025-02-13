@@ -90,13 +90,35 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     }
 
     // экспортировать БД в Stream (напр. файл)
-    bool writeTo(Stream& stream) {
-        return writeTo(Writer(stream));
+    template <typename T>
+    bool writeTo(T& writer) {
+        // [db len] [hash32, value32] [hash32, size16, data...]
+
+#define _DB_WRITE(x) wr += writer.write((uint8_t*)&x, sizeof(x))
+
+        size_t wr = 0;
+        uint16_t len = length();
+        _DB_WRITE(len);
+        for (size_t i = 0; i < length(); i++) {
+            if (!_buf[i].valid()) continue;
+            if (_buf[i].isDynamic()) {
+                if (!_buf[i].ptr()) continue;
+                _DB_WRITE(_buf[i].typehash);
+                uint16_t size = _buf[i].size();
+                _DB_WRITE(size);
+                wr += writer.write((uint8_t*)_buf[i].buffer(), size);
+            } else {
+                _DB_WRITE(_buf[i].typehash);
+                _DB_WRITE(_buf[i].data);
+            }
+        }
+        return wr == writeSize();
     }
 
     // экспортировать БД в буфер размера writeSize()
     bool writeTo(uint8_t* buffer) {
-        return writeTo(Writer(buffer));
+        Writer wr(buffer);
+        return writeTo(wr);
     }
 
     // импортировать БД из Stream (напр. файл)
@@ -117,7 +139,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
             gdb::block_t block(type, hash);
             if (!block.init(reserve)) return 0;
             if (insert(pos.idx, block)) {
-                _changed = true;
+                _change();
                 return 1;
             } else {
                 block.reset();
@@ -143,7 +165,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
     void clear() {
         _cache = -1;
         while (length()) pop().reset();
-        _changed = true;
+        _change();
     }
 
     // удалить из БД ячейки, ключей которых нет в переданном списке
@@ -161,7 +183,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
             }
             if (!found) {
                 gtl::stack_uniq<gdb::block_t>::remove(i);
-                _changed = true;
+                _change();
             }
         }
     }
@@ -222,7 +244,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
             _cache = -1;
             _buf[pos.idx].reset();
             gtl::stack_uniq<gdb::block_t>::remove(pos.idx);
-            _changed = true;
+            _change();
         }
     }
     void remove(const Text& key) {
@@ -277,6 +299,13 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         return 0;
     }
 
+    // пропустить необработанные обновления
+    void skipUpdates() {
+#ifndef DB_NO_UPDATES
+        _updates.clear();
+#endif
+    }
+
     // получить хеш обновления из стека
     size_t updateNext() {
 #ifndef DB_NO_UPDATES
@@ -302,32 +331,37 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
 #endif
         _keepTypes = gdb._keepTypes;
         _useUpdates = gdb._useUpdates;
-        _changed = true;
+        _change();
     }
-    bool _changed = false;
+
+    bool _update = 0;
 
    private:
     bool _keepTypes = true;
     bool _useUpdates = false;
+    bool _changed = false;
     int16_t _cache = -1;
     size_t _cache_h = 0;
 
 #ifndef DB_NO_UPDATES
     gtl::stack_uniq<size_t> _updates;
-    void _setChanged(size_t hash) {
-        _changed = true;
-        if (_useUpdates && _updates.indexOf(hash) < 0) _updates.push(hash);
-    }
-#else
-    void _setChanged(size_t hash) {
-        _changed = true;
-    }
 #endif
+    void _setChanged(size_t hash) {
+        _change();
+#ifndef DB_NO_UPDATES
+        if (_useUpdates && _updates.indexOf(hash) < 0) _updates.push(hash);
+#endif
+    }
 
     struct pos_t {
         int idx;
         bool exists;
     };
+
+    void _change() {
+        _changed = true;
+        _update = true;
+    }
 
     pos_t _search(size_t hash) {
         if (!length()) return pos_t{0, false};
@@ -340,27 +374,6 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
             else high = mid - 1;
         }
         return pos_t{low, false};
-    }
-
-    bool writeTo(Writer writer) {
-        // [bd len] [hash32, value32] [hash32, size16, data...]
-        uint16_t len = length();
-        writer.write(len);
-
-        for (size_t i = 0; i < length(); i++) {
-            if (!_buf[i].valid()) continue;
-            if (_buf[i].isDynamic()) {
-                if (!_buf[i].ptr()) continue;
-                writer.write(_buf[i].typehash);
-                uint16_t size = _buf[i].size();
-                writer.write(size);
-                writer.write(_buf[i].buffer(), size);
-            } else {
-                writer.write(_buf[i].typehash);
-                writer.write(_buf[i].data);
-            }
-        }
-        return writer.writed() == writeSize();
     }
 
     bool readFrom(Reader reader) {
@@ -392,8 +405,8 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
                 block.reset();
                 return 0;
             }
-            // _changed = true;
         }
+        _change();
         return 1;
     }
 
@@ -401,7 +414,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
         pos_t pos = _search(hash);
         if (pos.exists) {
             if (mode == Putmode::Init && _buf[pos.idx].type() == val.type) return 0;
-            
+
             if (_buf[pos.idx].update(val.type, val.ptr, val.len, (_keepTypes && mode != Putmode::Init))) {
                 _setChanged(hash);
                 return 1;
@@ -412,7 +425,7 @@ class GyverDB : private gtl::stack_uniq<gdb::block_t> {
             gdb::block_t block(val.type, hash);
             if (block.write(val.ptr, val.len)) {
                 if (insert(pos.idx, block)) {
-                    _changed = true;
+                    _change();
                     return 1;
                 } else {
                     block.reset();
