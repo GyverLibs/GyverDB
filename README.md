@@ -110,15 +110,15 @@ bool has(const Text& key);
 
 // записать данные (создать ячейку, если не существует). DATA - любой тип данных
 bool set(size_t hash, DATA data);
-bool set(const Text& key hash, DATA data);
+bool set(const Text& key, DATA data);
 
 // инициализировать данные (создать ячейку и записать, если ячейка не существует). DATA - любой тип данных
 bool init(size_t hash, DATA data);
-bool init(const Text& key hash, DATA data);
+bool init(const Text& key, DATA data);
 
 // обновить данные (если ячейка существует). DATA - любой тип данных
 bool update(size_t hash, DATA data);
-bool update(const Text& key hash, DATA data);
+bool update(const Text& key, DATA data);
 
 // использовать стек обновлений (умолч. false)
 void useUpdates(bool use);
