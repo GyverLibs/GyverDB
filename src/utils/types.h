@@ -73,6 +73,10 @@ class Converter {
         return 0;
     }
 
+    bool valid() const {
+        return p;
+    }
+
     String toString() const {
         if (!p) return String();
         switch (type) {
@@ -98,7 +102,7 @@ class Converter {
     }
 
     bool toBool() const {
-        if (!p) return 0;
+        if (!p) return false;
         switch (type) {
             case Type::String: return (*(char*)p == 't' || *(char*)p == '1');
             default: break;

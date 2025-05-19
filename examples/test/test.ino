@@ -26,6 +26,7 @@ void setup() {
     
     int i = db["intval"]; // авто конверсия
     i = db["intval"].toBool(); // ручная 
+    db["bool"_h] == true;
     i = db["intval"].toFloat();
     i = db["intval"].toInt();
     Serial.println(db["intval"]); // печатается

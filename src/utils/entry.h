@@ -54,14 +54,14 @@ class Entry : protected block_t, public Text, public Converter {
     bool writeTo(T& dest) const {
         if (block_t::valid() && buffer() && sizeof(T) == size()) {
             writeBytes(&dest);
-            return 1;
+            return true;
         }
-        return 0;
+        return false;
     }
 
     bool addString(String& s) const {  // override
         toText().addString(s);
-        return 1;
+        return true;
     }
 
     String toString() const {
@@ -98,30 +98,40 @@ class Entry : protected block_t, public Text, public Converter {
 
     // ======================= CAST =======================
 
-#define DB_MAKE_OPERATOR(type, func)      \
-    operator type() const {               \
-        return (type)func();              \
-    }                                     \
-    bool operator==(const type v) const { \
-        return (type)func() == v;         \
-    }                                     \
-    bool operator!=(const type v) const { \
-        return (type)func() != v;         \
-    }                                     \
-    bool operator>(const type v) const {  \
-        return (type)func() > v;          \
-    }                                     \
-    bool operator<(const type v) const {  \
-        return (type)func() < v;          \
-    }                                     \
-    bool operator>=(const type v) const { \
-        return (type)func() >= v;         \
-    }                                     \
-    bool operator<=(const type v) const { \
-        return (type)func() <= v;         \
+#define DB_MAKE_OPERATOR(T, func)      \
+    operator T() const {               \
+        return (T)func();              \
+    }                                  \
+    bool operator==(const T v) const { \
+        return (T)func() == v;         \
+    }                                  \
+    bool operator!=(const T v) const { \
+        return (T)func() != v;         \
+    }                                  \
+    bool operator>(const T v) const {  \
+        return (T)func() > v;          \
+    }                                  \
+    bool operator<(const T v) const {  \
+        return (T)func() < v;          \
+    }                                  \
+    bool operator>=(const T v) const { \
+        return (T)func() >= v;         \
+    }                                  \
+    bool operator<=(const T v) const { \
+        return (T)func() <= v;         \
     }
 
-    DB_MAKE_OPERATOR(bool, toBool)
+    operator bool() const {
+        return toBool();
+    }
+    bool operator==(const bool v) const {
+        return Converter::valid() ? Converter::toBool() == v : false;
+    }
+    bool operator!=(const bool v) const {
+        return *this == !v;
+    }
+
+    // DB_MAKE_OPERATOR(bool, toBool)
     DB_MAKE_OPERATOR(char, toInt)
     DB_MAKE_OPERATOR(signed char, toInt)
     DB_MAKE_OPERATOR(unsigned char, toInt)
