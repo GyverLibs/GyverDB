@@ -80,6 +80,7 @@ class Converter {
     String toString() const {
         if (!p) return String();
         switch (type) {
+#ifndef DB_NO_CONVERT
             case Type::Int:
             case Type::Int64:
                 return String(toInt());
@@ -88,13 +89,14 @@ class Converter {
             case Type::Uint64:
                 return String((uint32_t)toInt());
 
-            case Type::String:
-                return Text((const char*)p, len).toString();
-
 #ifndef DB_NO_FLOAT
             case Type::Float:
                 return String(toFloat());
 #endif
+#endif
+            case Type::String:
+                return Text((const char*)p, len).toString();
+
             default:
                 break;
         }
@@ -124,9 +126,10 @@ class Converter {
             case Type::Float:
                 return *((float*)p);
 
+#ifndef DB_NO_CONVERT
             case Type::String:
                 return Text((const char*)p, len).toInt32();
-
+#endif
             default:
                 break;
         }
@@ -149,9 +152,10 @@ class Converter {
             case Type::Uint64:
                 return *((int64_t*)p);
 #endif
+#ifndef DB_NO_CONVERT
             case Type::String:
                 return Text((const char*)p, len).toInt64();
-
+#endif
             default:
                 break;
         }
@@ -163,7 +167,9 @@ class Converter {
         switch (type) {
             case Type::Float: return *((float*)p);
 #ifndef DB_NO_FLOAT
+#ifndef DB_NO_CONVERT
             case Type::String: return Text((const char*)p, len).toFloat();
+#endif
 #endif
             default: break;
         }
@@ -186,6 +192,10 @@ class Converter {
             default: break;
         }
         return Value();
+    }
+
+    size_t length() const {
+        return len;
     }
 
    private:

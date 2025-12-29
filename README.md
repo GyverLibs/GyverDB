@@ -195,8 +195,6 @@ Bin
 ```
 
 ### Entry
-> Наследует класс [Text](https://github.com/GyverLibs/StringUtils?tab=readme-ov-file#text) для более удобного чтения строк
-
 ```cpp
 // тип ячейки
 gdb::Type type();

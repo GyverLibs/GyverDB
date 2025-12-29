@@ -1,12 +1,11 @@
 #pragma once
 #include <Arduino.h>
-#include <StringUtils.h>
 
 #include "block.h"
 
 namespace gdb {
 
-class Entry : protected block_t, public Text, public Converter {
+class Entry : protected block_t, public Printable, /*public Text, */ public Converter {
    public:
     using block_t::buffer;
     using block_t::isValidString;
@@ -16,7 +15,7 @@ class Entry : protected block_t, public Text, public Converter {
     using block_t::type;
 
     Entry() {}
-    Entry(const block_t& b) : block_t(b), Text(b.isValidString() ? (const char*)b.buffer() : nullptr, b.size()), Converter(b.type(), b.buffer(), b.size()) {}
+    Entry(const block_t& b) : block_t(b), /*Text(b.isValidString() ? (const char*)b.buffer() : nullptr, b.size()),*/ Converter(b.type(), b.buffer(), b.size()) {}
 
     // тип записи
     gdb::Type type() const {
@@ -59,43 +58,6 @@ class Entry : protected block_t, public Text, public Converter {
         return false;
     }
 
-    bool addString(String& s) const {  // override
-        toText().addString(s);
-        return true;
-    }
-
-    String toString() const {
-        return Converter::toString();
-    }
-
-    bool toBool() const {
-        return Converter::toBool();
-    }
-
-    int32_t toInt() const {
-        return Converter::toInt();
-    }
-
-    int16_t toInt16() const {
-        return Converter::toInt16();
-    }
-
-    int32_t toInt32() const {
-        return Converter::toInt32();
-    }
-
-    int64_t toInt64() const {
-        return Converter::toInt64();
-    }
-
-    float toFloat() const {
-        return Converter::toFloat();
-    }
-
-    Value toText() const {
-        return Converter::toText();
-    }
-
     // ======================= CAST =======================
 
 #define DB_MAKE_OPERATOR(T, func)      \
@@ -131,6 +93,40 @@ class Entry : protected block_t, public Text, public Converter {
         return *this == !v;
     }
 
+    // TEXT
+
+    bool operator==(const Text& s) const {
+        return toText() == s;
+    }
+    bool operator!=(const Text& s) const {
+        return toText() != s;
+    }
+    bool operator==(const char* s) const {
+        return toText() == s;
+    }
+    bool operator!=(const char* s) const {
+        return toText() != s;
+    }
+    bool operator==(const __FlashStringHelper* s) const {
+        return toText() == s;
+    }
+    bool operator!=(const __FlashStringHelper* s) const {
+        return toText() != s;
+    }
+    bool operator==(const String& s) const {
+        return toText() == s;
+    }
+    bool operator!=(const String& s) const {
+        return toText() != s;
+    }
+
+    operator Text() const {
+        return Converter::toText();
+    }
+    operator Value() const {
+        return Converter::toText();
+    }
+
     // DB_MAKE_OPERATOR(bool, toBool)
     DB_MAKE_OPERATOR(char, toInt)
     DB_MAKE_OPERATOR(signed char, toInt)
@@ -147,27 +143,6 @@ class Entry : protected block_t, public Text, public Converter {
     DB_MAKE_OPERATOR(double, toFloat)
 
    private:
-    using Text::toBool;
-    using Text::toFloat;
-    using Text::toInt;
-    using Text::toInt16;
-    using Text::toInt32;
-    using Text::toInt64;
-    using Text::toString;
-    using Text::type;
-    using Text::operator bool;
-    using Text::operator char;
-    using Text::operator signed char;
-    using Text::operator short;
-    using Text::operator unsigned short;
-    using Text::operator int;
-    using Text::operator unsigned int;
-    using Text::operator long;
-    using Text::operator unsigned long;
-    using Text::operator long long;
-    using Text::operator unsigned long long;
-    using Text::operator float;
-    using Text::operator double;
 };
 
 }  // namespace gdb
