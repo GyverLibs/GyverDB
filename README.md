@@ -120,6 +120,9 @@ bool init(const Text& key, DATA data);
 bool update(size_t hash, DATA data);
 bool update(const Text& key, DATA data);
 
+// подключить обработчик изменения значения записи вида void f(size_t hash)
+void onChange(ChangeCallback cb);
+
 // использовать стек обновлений (умолч. false)
 void useUpdates(bool use);
 

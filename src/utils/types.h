@@ -194,6 +194,10 @@ class Converter {
         return Value();
     }
 
+    String toString() {
+        return toText().toString();
+    }
+
     size_t length() const {
         return len;
     }

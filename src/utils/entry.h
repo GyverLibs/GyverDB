@@ -120,11 +120,14 @@ class Entry : protected block_t, public Printable, /*public Text, */ public Conv
         return toText() != s;
     }
 
-    operator Text() const {
+    explicit operator Text() const {
         return Converter::toText();
     }
-    operator Value() const {
+    explicit operator Value() const {
         return Converter::toText();
+    }
+    operator String() const {
+        return Converter::toString();
     }
 
     // DB_MAKE_OPERATOR(bool, toBool)
