@@ -45,7 +45,9 @@ class AnyType {
     AnyType(unsigned long long val) : buf(val), ptr(&buf), len(8), type(Type::Uint64) {}
 #endif
 
-    AnyType(float val) : buf(*((uint32_t*)&val)), ptr(&buf), len(4), type(Type::Float) {}
+    AnyType(float val) : ptr(&buf), len(sizeof(float)), type(Type::Float) {
+        memcpy(&buf, &val, sizeof(float));
+    }
     AnyType(double val) : AnyType((float)val) {}
 
     const void* ptr = nullptr;
