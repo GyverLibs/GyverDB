@@ -35,29 +35,35 @@ class GyverDB : private gtl::stack<gdb::block_t> {
     GyverDB(uint16_t reserveEntries = 0) {
         reserve(reserveEntries);
     }
-    GyverDB(const GyverDB& db) = delete;
-    GyverDB(GyverDB& db) {
-        move(db);
-    }
-    GyverDB(GyverDB&& db) noexcept {
-        move(db);
-    }
-    GyverDB& operator=(GyverDB db) {
-        move(db);
-        return *this;
-    }
 
-    void move(GyverDB& db) noexcept {
-        ST::move(db);
-#ifndef DB_NO_UPDATES
-        _updates.move(db._updates);
-#endif
-        gtl::swap(_keepTypes, db._keepTypes);
-        gtl::swap(_useUpdates, db._useUpdates);
-        gtl::swap(_cache, db._cache);
-        gtl::swap(_cache_h, db._cache_h);
-        _change();
-    }
+    // GyverDB(const GyverDB& db) = delete;
+    // GyverDB(GyverDB&& db) = delete;
+
+    // GyverDB& operator=(const GyverDB& db) = delete;
+    // GyverDB& operator=(GyverDB&& db) = delete;
+
+    //     GyverDB(GyverDB& db) : ST() {
+    //         move(db);
+    //     }
+    //     GyverDB(GyverDB&& db) noexcept {
+    //         move(db);
+    //     }
+    //     GyverDB& operator=(GyverDB db) {
+    //         move(db);
+    //         return *this;
+    //     }
+
+    //     void move(GyverDB& db) noexcept {
+    //         ST::move(db);
+    // #ifndef DB_NO_UPDATES
+    //         _updates.move(db._updates);
+    // #endif
+    //         gtl::swap(_keepTypes, db._keepTypes);
+    //         gtl::swap(_useUpdates, db._useUpdates);
+    //         gtl::swap(_cache, db._cache);
+    //         gtl::swap(_cache_h, db._cache_h);
+    //         _change();
+    //     }
 
     ~GyverDB() {
         clear();
@@ -411,6 +417,12 @@ class GyverDB : private gtl::stack<gdb::block_t> {
             }
         }
         _change();
+
+        if (_change_cb) {
+            for (size_t i = 0; i < length(); i++) {
+                _change_cb(_buf[i].keyHash());
+            }
+        }
         return 1;
     }
 
