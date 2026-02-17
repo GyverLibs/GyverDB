@@ -305,7 +305,7 @@ class GyverDB : private gtl::stack<gdb::block_t> {
     bool update(const Text& key, gdb::AnyType val) { return _put(key.hash(), val, Putmode::Update); }
 
     // ===================== MISC =====================
-    // подключить обработчик изменения значения записи вида void f(size_t hash)
+    // подключить обработчик создания и изменения значения записи вида void f(size_t hash)
     void onChange(ChangeCallback cb) {
         _change_cb = cb;
     }
