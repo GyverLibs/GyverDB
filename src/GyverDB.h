@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <GTL.h>
 #include <StreamIO.h>
-#include <StringUtils.h>
+#include <StringUtilsGyver.h>
 
 #include "utils/access.h"
 #include "utils/anytype.h"

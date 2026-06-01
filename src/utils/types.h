@@ -1,7 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <FOR_MACRO.h>
-#include <StringUtils.h>
+#include <StringUtilsGyver.h>
 
 #define DB_TYPE_SIZE (3ul)
 #define DB_HASH_SIZE (32ul - DB_TYPE_SIZE)

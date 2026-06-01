@@ -27,8 +27,8 @@ class Access : public Entry {
 
     template <typename T>
     T operator++(T) {
-        T value = (T)(*this) + 1;
-        _hook(_db, _hash, AnyType(value));
+        T value = (T)(*this);
+        _hook(_db, _hash, AnyType(value + 1));
         return value;
     }
 
@@ -41,8 +41,8 @@ class Access : public Entry {
 
     template <typename T>
     T operator--(T) {
-        T value = (T)(*this) - 1;
-        _hook(_db, _hash, AnyType(value));
+        T value = (T)(*this);
+        _hook(_db, _hash, AnyType(value - 1));
         return value;
     }
 
